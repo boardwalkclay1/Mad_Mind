@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mad Mind – Dashboard</title>
+  <link rel="stylesheet" href="madmind.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="mad-topbar">
+      <div class="mad-topbar-left">
+        <div id="dash-avatar" class="mad-avatar">MM</div>
+        <div>
+          <div class="mad-topbar-title">Mad Mind</div>
+          <div id="dash-location" style="font-size:0.7rem;color:rgba(249,243,229,.7);">
+            Location: unknown
+          </div>
+        </div>
+      </div>
+      <div class="mad-topbar-right">
+        <button class="mad-icon-btn" id="dash-notif-btn">🔔</button>
+        <button class="mad-icon-btn" id="dash-profile-btn">👤</button>
+      </div>
+    </header>
+
+    <section>
+      <p style="font-size:0.85rem;margin-bottom:8px;color:rgba(249,243,229,.8);">
+        Tap a bubble to open a world:
+      </p>
+      <div class="feature-bubbles-container" id="feature-bubbles-container"></div>
+    </section>
+  </div>
+
+  <nav class="mad-bottom-nav">
+    <button onclick="window.location.href='map.html'">Map</button>
+    <button onclick="window.location.href='messages.html'">Messages</button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="window.location.href='journal.html'">Journal</button>
+  </nav>
+
+  <script type="module">
+    import { initBubbles } from './bubbles.js';
+
+    const layer = initBubbles({ count: 18, clickable: true });
+
+    // Feature bubbles overlay (bigger, labeled)
+    const container = document.getElementById("feature-bubbles-container");
+    const features = [
+      { key: "map", label: "Map", target: "map.html" },
+      { key: "messages", label: "Messages", target: "messages.html" },
+      { key: "trades", label: "Trades", target: "trades.html" },
+      { key: "journal", label: "Journal", target: "journal.html" },
+      { key: "services", label: "My Services", target: "profile.html#services" },
+      { key: "media", label: "Media", target: "profile.html#media" },
+      { key: "cities", label: "Cities", target: "profile.html#cities" },
+      { key: "nearby", label: "Nearby", target: "map.html#nearby" },
+      { key: "hiddenReviews", label: "Hidden Reviews", target: "map.html#hidden" },
+      { key: "settings", label: "Settings", target: "settings.html" }
+    ];
+
+    const { width, height } = container.getBoundingClientRect();
+
+    features.forEach((f, i) => {
+      const b = document.createElement("div");
+      b.className = "bubble gold";
+      const size = 90 + (i % 3) * 15;
+      b.style.width = `${size}px`;
+      b.style.height = `${size}px`;
+
+      const x = (width / 2) + Math.cos((i / features.length) * Math.PI * 2) * (width / 4) - size / 2;
+      const y = (height / 2) + Math.sin((i / features.length) * Math.PI * 2) * (height / 4) - size / 2;
+
+      b.style.left = `${x}px`;
+      b.style.top = `${y}px`;
+      b.style.position = "absolute";
+      b.style.display = "flex";
+      b.style.alignItems = "center";
+      b.style.justifyContent = "center";
+      b.style.textAlign = "center";
+      b.style.fontSize = "0.7rem";
+      b.style.textTransform = "uppercase";
+      b.style.letterSpacing = "0.12em";
+      b.style.padding = "6px";
+      b.textContent = f.label;
+
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.location.href = f.target;
+      });
+
+      container.appendChild(b);
+    });
+
+    // Load current user display
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("mm_users") || "[]");
+    }
+    const currentId = localStorage.getItem("mm_current_user_id");
+    if (!currentId) {
+      // No user, send to login
+      // TODO: In Worker version, check cookie/session instead.
+      window.location.href = "login.html";
+    } else {
+      const users = getUsers();
+      const user = users.find(u => u.id === currentId);
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        const initials = (user.username || "?").slice(0, 2).toUpperCase();
+        document.getElementById("dash-avatar").textContent = initials;
+      }
+    }
+
+    // Basic geolocation (optional)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          // TODO: Later, send to Worker to resolve city / store location server-side.
+          document.getElementById("dash-location").textContent =
+            "Location: coordinates locked";
+        },
+        () => {
+          document.getElementById("dash-location").textContent = "Location: disabled";
+        }
+      );
+    }
+
+    document.getElementById("dash-profile-btn").addEventListener("click", () => {
+      window.location.href = "profile.html";
+    });
+
+    document.getElementById("dash-notif-btn").addEventListener("click", () => {
+      alert("Notifications feed coming soon (Cloudflare Worker /api/notifications).");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+/* madmind.css */
+
+/* Base reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #2b0000 0%, #000000 45%, #000000 100%);
+  color: #f9f3e5;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Glow palette */
+:root {
+  --red: #ff0044;
+  --gold: #f5c542;
+  --gold-soft: #fbe3a1;
+  --bg-dark: #050506;
+}
+
+/* Glow helpers */
+.glow-gold {
+  box-shadow: 0 0 12px rgba(245, 197, 66, 0.7);
+}
+
+.glow-red {
+  box-shadow: 0 0 14px rgba(255, 0, 68, 0.7);
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+/* Centered cosmic card */
+.mad-card {
+  background: rgba(5, 5, 6, 0.95);
+  border-radius: 18px;
+  border: 1px solid rgba(245, 197, 66, 0.6);
+  padding: 24px 22px 28px;
+  width: min(420px, 95vw);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Page title */
+.mad-title {
+  font-size: 1.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 18px;
+  color: var(--gold-soft);
+}
+
+/* Inputs */
+.mad-field {
+  margin-bottom: 16px;
+}
+
+.mad-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(249, 243, 229, 0.7);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.mad-input {
+  width: 100%;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 197, 66, 0.7);
+  background: #090909;
+  color: #f9f3e5;
+  outline: none;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.mad-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(245, 197, 66, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Buttons */
+.mad-btn {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 0.8rem;
+  margin-top: 6px;
+  transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+}
+
+.mad-btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, #ffdd77 40%, #f5c542 100%);
+  color: #1a1200;
+  box-shadow: 0 0 15px rgba(245, 197, 66, 0.8);
+}
+
+.mad-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(245, 197, 66, 1);
+}
+
+.mad-btn-secondary {
+  background: linear-gradient(135deg, #5c0000 0%, #ff0044 70%);
+  color: #ffe7f0;
+  box-shadow: 0 0 12px rgba(255, 0, 68, 0.8);
+}
+
+.mad-btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(255, 0, 68, 1);
+}
+
+/* Subtext links */
+.mad-subtext {
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 10px;
+  color: rgba(249, 243, 229, 0.7);
+}
+
+.mad-subtext a {
+  color: var(--gold-soft);
+  text-decoration: none;
+}
+
+/* Floating bubbles canvas container */
+.bubble-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Bubble element */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #ffffffaa 0, #ff0044 20%, #330000 70%);
+  box-shadow: 0 0 20px rgba(255, 0, 68, 0.8);
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+}
+
+.bubble.gold {
+  background: radial-gradient(circle at 30% 20%, #ffffffaa 0, #f5c542 20%, #332000 70%);
+  box-shadow: 0 0 20px rgba(245, 197, 66, 0.9);
+}
+
+.bubble:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
+
+/* Layout shells */
+.page-shell {
+  position: relative;
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 18px;
+  z-index: 1;
+}
+
+/* Top nav bar for dashboard / inner pages */
+.mad-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mad-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mad-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #ff0044);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #1a1200;
+  font-weight: 700;
+}
+
+.mad-topbar-title {
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+
+.mad-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mad-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 197, 66, 0.6);
+  background: #070707;
+  color: var(--gold-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  box-shadow: 0 0 8px rgba(245, 197, 66, 0.4);
+}
+
+/* Floating feature bubbles container on dashboard */
+.feature-bubbles-container {
+  position: relative;
+  height: calc(100vh - 130px);
+  overflow: hidden;
+}
+
+/* Bottom nav */
+.mad-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  background: rgba(5, 5, 6, 0.96);
+  border-radius: 999px;
+  border: 1px solid rgba(245, 197, 66, 0.7);
+  box-shadow: 0 0 18px rgba(245, 197, 66, 0.5);
+  display: flex;
+  gap: 22px;
+  padding: 6px 18px;
+  z-index: 2;
+}
+
+.mad-bottom-nav button {
+  background: transparent;
+  border: none;
+  color: var(--gold-soft);
+  cursor: pointer;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+/* Simple tags / chips */
+.mad-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 197, 66, 0.6);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+/* Scrollable panel */
+.scroll-panel {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Map placeholder */
+.map-placeholder {
+  width: 100%;
+  height: 55vh;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 197, 66, 0.4);
+  background: radial-gradient(circle at 10% 10%, #440000, #000000);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Journal styles */
+.journal-book {
+  background: #19130b;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 197, 66, 0.7);
+  padding: 12px 14px 16px;
+  margin-top: 10px;
+}
+
+.journal-entry {
+  font-family: "Dancing Script", "Segoe Script", "Lucida Handwriting", cursive;
+  color: #fbe3a1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed rgba(245, 197, 66, 0.4);
+  padding-bottom: 8px;
+}

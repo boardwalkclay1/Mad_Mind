@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mad Mind – Trades</title>
+  <link rel="stylesheet" href="madmind.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="mad-topbar">
+      <div class="mad-topbar-left">
+        <div class="mad-avatar">⚖️</div>
+        <div>
+          <div class="mad-topbar-title">Trades & offers</div>
+          <div style="font-size:0.7rem;color:rgba(249,243,229,.8);">
+            Track what you give and receive
+          </div>
+        </div>
+      </div>
+      <div class="mad-topbar-right">
+        <button class="mad-icon-btn" onclick="window.location.href='dashboard.html'">⌂</button>
+      </div>
+    </header>
+
+    <div class="scroll-panel">
+      <section>
+        <h2 style="font-size:0.9rem;margin-bottom:4px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Incoming offers
+        </h2>
+        <div id="trades-incoming"></div>
+      </section>
+
+      <section style="margin-top:14px;border-top:1px solid rgba(245,197,66,.4);padding-top:8px;">
+        <h2 style="font-size:0.9rem;margin-bottom:4px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Outgoing offers
+        </h2>
+        <div id="trades-outgoing"></div>
+      </section>
+    </div>
+  </div>
+
+  <nav class="mad-bottom-nav">
+    <button onclick="window.location.href='dashboard.html'">Home</button>
+    <button onclick="window.location.href='map.html'">Map</button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+  </nav>
+
+  <script type="module">
+    import { initBubbles } from './bubbles.js';
+    initBubbles({ count: 10, clickable: false });
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("mm_users") || "[]");
+    }
+    function getTrades() {
+      return JSON.parse(localStorage.getItem("mm_trades") || "[]");
+    }
+    function saveTrades(trades) {
+      localStorage.setItem("mm_trades", JSON.stringify(trades));
+    }
+
+    const currentId = localStorage.getItem("mm_current_user_id");
+    if (!currentId) window.location.href = "login.html";
+    const users = getUsers();
+    const me = users.find(u => u.id === currentId);
+    if (!me) window.location.href = "login.html";
+
+    const incomingEl = document.getElementById("trades-incoming");
+    const outgoingEl = document.getElementById("trades-outgoing");
+
+    function userLabel(id) {
+      const u = users.find(x => x.id === id);
+      return u ? "@" + u.username : "Unknown";
+    }
+
+    function renderTrades() {
+      const trades = getTrades();
+      incomingEl.innerHTML = "";
+      outgoingEl.innerHTML = "";
+
+      const incoming = trades.filter(t => t.to === currentId);
+      const outgoing = trades.filter(t => t.from === currentId);
+
+      if (!incoming.length) {
+        incomingEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(249,243,229,.7);">No incoming offers yet.</p>';
+      } else {
+        incoming.forEach(t => {
+          const div = document.createElement("div");
+          div.style.border = "1px solid rgba(245,197,66,.6)";
+          div.style.borderRadius = "10px";
+          div.style.padding = "7px 9px";
+          div.style.marginBottom = "6px";
+          div.innerHTML = `
+            <div style="font-size:0.85rem;color:var(--gold-soft);">
+              From <strong>${userLabel(t.from)}</strong> • Type: ${t.type.toUpperCase()}
+            </div>
+            <div style="font-size:0.8rem;margin-top:3px;color:rgba(249,243,229,.85);">
+              Their offer: ${t.offerForYou || "–"}<br/>
+              Your side: ${t.yourOffer || "–"}
+            </div>
+            <div style="font-size:0.72rem;margin-top:3px;">
+              Status: <strong>${t.status}</strong>
+            </div>
+            <div style="margin-top:5px;display:flex;gap:6px;">
+              <button data-accept="${t.id}" class="mad-btn mad-btn-primary" style="width:auto;padding:4px 8px;font-size:0.7rem;">Accept</button>
+              <button data-decline="${t.id}" class="mad-btn mad-btn-secondary" style="width:auto;padding:4px 8px;font-size:0.7rem;">Decline</button>
+              <button data-complete="${t.id}" class="mad-btn mad-btn-secondary" style="width:auto;padding:4px 8px;font-size:0.7rem;background:#005c2f;">Complete</button>
+            </div>
+          `;
+          incomingEl.appendChild(div);
+        });
+      }
+
+      if (!outgoing.length) {
+        outgoingEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(249,243,229,.7);">No outgoing offers yet.</p>';
+      } else {
+        outgoing.forEach(t => {
+          const div = document.createElement("div");
+          div.style.border = "1px solid rgba(245,197,66,.6)";
+          div.style.borderRadius = "10px";
+          div.style.padding = "7px 9px";
+          div.style.marginBottom = "6px";
+          div.innerHTML = `
+            <div style="font-size:0.85rem;color:var(--gold-soft);">
+              To <strong>${userLabel(t.to)}</strong> • Type: ${t.type.toUpperCase()}
+            </div>
+            <div style="font-size:0.8rem;margin-top:3px;color:rgba(249,243,229,.85);">
+              Your offer: ${t.yourOffer || "–"}<br/>
+              Their side: ${t.offerForYou || "–"}
+            </div>
+            <div style="font-size:0.72rem;margin-top:3px;">
+              Status: <strong>${t.status}</strong>
+            </div>
+          `;
+          outgoingEl.appendChild(div);
+        });
+      }
+
+      incomingEl.querySelectorAll("button[data-accept]").forEach(btn => {
+        btn.addEventListener("click", () => updateStatus(btn.getAttribute("data-accept"), "accepted"));
+      });
+      incomingEl.querySelectorAll("button[data-decline]").forEach(btn => {
+        btn.addEventListener("click", () => updateStatus(btn.getAttribute("data-decline"), "declined"));
+      });
+      incomingEl.querySelectorAll("button[data-complete]").forEach(btn => {
+        btn.addEventListener("click", () => updateStatus(btn.getAttribute("data-complete"), "completed"));
+      });
+    }
+
+    function updateStatus(id, status) {
+      const trades = getTrades();
+      const t = trades.find(x => x.id === id);
+      if (!t) return;
+      t.status = status;
+      saveTrades(trades);
+      renderTrades();
+      // TODO: later PUT /api/trades/:id
+    }
+
+    // Seed demo if empty
+    (function seedDemo() {
+      const trades = getTrades();
+      if (!trades.length && users.length > 1) {
+        const peer = users.find(u => u.id !== currentId);
+        if (!peer) return;
+        trades.push({
+          id: "trade_demo",
+          from: peer.id,
+          to: currentId,
+          type: "trade",
+          yourOffer: "You fix my van’s battery",
+          offerForYou: "I cook for you for 2 days",
+          status: "proposed",
+          createdAt: new Date().toISOString()
+        });
+        saveTrades(trades);
+      }
+    })();
+
+    renderTrades();
+  </script>
+</body>
+</html>

@@ -1,249 +1,125 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Mad Mind – Profile</title>
-  <link rel="stylesheet" href="madmind.css" />
+<meta charset="UTF-8">
+<title>Mad Mind – Profile</title>
+<style>
+    body { background:#000; color:#fff; font-family:Arial; margin:0; }
+    header { padding:20px; border-bottom:1px solid #333; text-align:center; font-size:24px; }
+    .section { padding:20px; border-bottom:1px solid #222; }
+    .media-strip { display:flex; gap:10px; overflow-x:auto; }
+    .media-strip img, .media-strip video { width:120px; height:120px; object-fit:cover; border:1px solid #444; }
+    .service-card, .city-card, .journal-page { border:1px solid #444; padding:15px; margin-bottom:10px; }
+    .button { background:#111; border:1px solid #555; padding:8px 12px; cursor:pointer; }
+    .button:hover { background:#222; }
+    .journal-text { font-family:"Lucida Handwriting", cursive; white-space:pre-wrap; }
+</style>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="mad-topbar">
-      <div class="mad-topbar-left">
-        <div id="profile-avatar" class="mad-avatar">MM</div>
-        <div>
-          <div class="mad-topbar-title">Your nomad profile</div>
-          <div id="profile-username" style="font-size:0.78rem;color:rgba(249,243,229,.8);"></div>
-        </div>
-      </div>
-      <div class="mad-topbar-right">
-        <button class="mad-icon-btn" onclick="window.location.href='dashboard.html'">⌂</button>
-      </div>
-    </header>
 
-    <div class="scroll-panel">
-      <section style="margin-bottom:14px;">
-        <div class="mad-field">
-          <label class="mad-label" for="profile-bio">Short bio</label>
-          <textarea id="profile-bio" class="mad-input" rows="3" style="resize:vertical;"></textarea>
-        </div>
-        <button id="profile-save-btn" class="mad-btn mad-btn-primary">Save profile</button>
-      </section>
+<header>Mad Mind – Profile</header>
 
-      <section id="services">
-        <h2 class="mad-title" style="font-size:1.1rem;margin-bottom:8px;">Skills & services</h2>
-        <div class="mad-field">
-          <label class="mad-label" for="svc-title">Service title</label>
-          <input id="svc-title" class="mad-input" type="text" placeholder="Mobile mechanic, haircut, coding, tarot..." />
-        </div>
-        <div class="mad-field">
-          <label class="mad-label" for="svc-desc">Description</label>
-          <textarea id="svc-desc" class="mad-input" rows="2"></textarea>
-        </div>
-        <div class="mad-field">
-          <label class="mad-label" for="svc-tags">Tags (comma separated)</label>
-          <input id="svc-tags" class="mad-input" type="text" placeholder="mechanic, repairs, battery" />
-        </div>
-        <button id="svc-add-btn" class="mad-btn mad-btn-secondary">Add service</button>
+<div class="section" id="profileHeader">
+    <h2 id="profileName"></h2>
+    <p id="profileStatus"></p>
+    <button class="button" onclick="sendMessage()">Message</button>
+</div>
 
-        <div id="svc-list" style="margin-top:10px;"></div>
-      </section>
+<div class="section">
+    <h3>Media</h3>
+    <div class="media-strip" id="mediaStrip"></div>
+</div>
 
-      <section id="cities" style="margin-top:18px;">
-        <h2 class="mad-title" style="font-size:1.05rem;margin-bottom:6px;">Cities you've actually been to</h2>
-        <p style="font-size:0.78rem;margin-bottom:8px;color:rgba(249,243,229,.7);">
-          You can only add a city when your location is there. For now, use prototype manual add.
-        </p>
-        <div class="mad-field">
-          <label class="mad-label" for="city-name">City name (temporary prototype)</label>
-          <input id="city-name" class="mad-input" type="text" placeholder="Atlanta, GA" />
-        </div>
-        <button id="city-add-btn" class="mad-btn mad-btn-secondary">Add city (prototype)</button>
-        <div id="city-list" style="margin-top:10px;"></div>
-      </section>
+<div class="section">
+    <h3>Skills & Services</h3>
+    <div id="servicesList"></div>
+</div>
 
-      <section id="journal" style="margin-top:18px;">
-        <h2 class="mad-title" style="font-size:1.05rem;margin-bottom:4px;">Nomadic journal</h2>
-        <button id="journal-new-btn" class="mad-btn mad-btn-primary">New entry</button>
-        <div class="journal-book" id="journal-book"></div>
-      </section>
-    </div>
-  </div>
+<div class="section">
+    <h3>Cities I've Been To</h3>
+    <div id="citiesList"></div>
+</div>
 
-  <nav class="mad-bottom-nav">
-    <button onclick="window.location.href='dashboard.html'">Home</button>
-    <button onclick="window.location.href='map.html'">Map</button>
-    <button onclick="window.location.href='messages.html'">Messages</button>
-  </nav>
+<div class="section">
+    <h3>Nomadic Journal</h3>
+    <div id="journalPages"></div>
+    <button class="button" onclick="newJournalPage()">New Page</button>
+</div>
 
-  <script type="module">
-    import { initBubbles } from './bubbles.js';
-    initBubbles({ count: 10, clickable: true });
+<script>
+// ===== LOAD USER DATA =====
+const user = JSON.parse(localStorage.getItem("madmind_user")) || {
+    name:"Nomad",
+    status:"Wandering",
+    media:[],
+    services:[],
+    cities:[],
+    journal:[]
+};
 
-    function getUsers() {
-      return JSON.parse(localStorage.getItem("mm_users") || "[]");
-    }
-    function saveUsers(users) {
-      localStorage.setItem("mm_users", JSON.stringify(users));
-    }
+document.getElementById("profileName").innerText = user.name;
+document.getElementById("profileStatus").innerText = user.status;
 
-    const currentId = localStorage.getItem("mm_current_user_id");
-    if (!currentId) {
-      window.location.href = "login.html";
-    }
+// ===== MEDIA =====
+const mediaStrip = document.getElementById("mediaStrip");
+user.media.forEach(m => {
+    let el = document.createElement(m.type === "video" ? "video" : "img");
+    el.src = m.url;
+    if (m.type === "video") el.controls = true;
+    mediaStrip.appendChild(el);
+});
 
-    const users = getUsers();
-    const user = users.find(u => u.id === currentId);
-    if (!user) {
-      window.location.href = "login.html";
-    }
+// ===== SERVICES =====
+const servicesList = document.getElementById("servicesList");
+user.services.forEach(s => {
+    let card = document.createElement("div");
+    card.className = "service-card";
+    card.innerHTML = `
+        <h4>${s.title}</h4>
+        <p>${s.description}</p>
+        <button class="button">Offer Trade</button>
+        <button class="button">Offer Payment</button>
+    `;
+    servicesList.appendChild(card);
+});
 
-    document.getElementById("profile-avatar").textContent =
-      (user.username || "MM").slice(0, 2).toUpperCase();
-    document.getElementById("profile-username").textContent = "@" + user.username;
+// ===== CITIES =====
+const citiesList = document.getElementById("citiesList");
+user.cities.forEach(c => {
+    let card = document.createElement("div");
+    card.className = "city-card";
+    card.innerHTML = `
+        <h4>${c.name}</h4>
+        <p>${c.date}</p>
+        <p>${c.note || ""}</p>
+    `;
+    citiesList.appendChild(card);
+});
 
-    const bioEl = document.getElementById("profile-bio");
-    bioEl.value = user.bio || "";
+// ===== JOURNAL =====
+const journalPages = document.getElementById("journalPages");
+user.journal.forEach((p, i) => {
+    let page = document.createElement("div");
+    page.className = "journal-page";
+    page.innerHTML = `
+        <h4>Page ${i+1}</h4>
+        <div class="journal-text">${p.text}</div>
+    `;
+    journalPages.appendChild(page);
+});
 
-    document.getElementById("profile-save-btn").addEventListener("click", () => {
-      user.bio = bioEl.value;
-      saveUsers(users);
-      alert("Profile saved locally (later: PUT /api/profile).");
-    });
+function newJournalPage() {
+    const text = prompt("Write your journal entry");
+    if (!text) return;
+    user.journal.push({ text, date:new Date().toISOString() });
+    localStorage.setItem("madmind_user", JSON.stringify(user));
+    location.reload();
+}
 
-    // Services
-    const svcListEl = document.getElementById("svc-list");
-    user.services = user.services || [];
+function sendMessage() {
+    alert("Messaging coming soon");
+}
+</script>
 
-    function renderServices() {
-      svcListEl.innerHTML = "";
-      if (!user.services.length) {
-        svcListEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(249,243,229,.7);">No services yet.</p>';
-        return;
-      }
-      user.services.forEach((s, idx) => {
-        const wrapper = document.createElement("div");
-        wrapper.style.border = "1px solid rgba(245,197,66,.6)";
-        wrapper.style.borderRadius = "10px";
-        wrapper.style.padding = "8px 9px";
-        wrapper.style.marginBottom = "6px";
-        wrapper.innerHTML = `
-          <div style="font-size:0.9rem;font-weight:600;color:var(--gold-soft);">${s.title}</div>
-          <div style="font-size:0.8rem;color:rgba(249,243,229,.8);margin-top:2px;">${s.desc}</div>
-          <div style="margin-top:4px;">
-            ${(s.tags || []).map(t => `<span class="mad-chip">${t}</span>`).join("")}
-          </div>
-          <button data-idx="${idx}" class="mad-btn mad-btn-secondary" style="margin-top:6px;padding:5px 8px;font-size:0.68rem;width:auto;">Remove</button>
-        `;
-        svcListEl.appendChild(wrapper);
-      });
-
-      svcListEl.querySelectorAll("button[data-idx]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const idx = parseInt(e.target.getAttribute("data-idx"), 10);
-          user.services.splice(idx, 1);
-          saveUsers(users);
-          renderServices();
-        });
-      });
-    }
-
-    renderServices();
-
-    document.getElementById("svc-add-btn").addEventListener("click", () => {
-      const title = document.getElementById("svc-title").value.trim();
-      const desc = document.getElementById("svc-desc").value.trim();
-      const tags = document.getElementById("svc-tags").value.split(",").map(t => t.trim()).filter(Boolean);
-
-      if (!title) {
-        alert("Service needs a title.");
-        return;
-      }
-
-      user.services.push({ title, desc, tags });
-      saveUsers(users);
-      document.getElementById("svc-title").value = "";
-      document.getElementById("svc-desc").value = "";
-      document.getElementById("svc-tags").value = "";
-      renderServices();
-    });
-
-    // Cities (prototype without GPS)
-    const cityListEl = document.getElementById("city-list");
-    user.visitedCities = user.visitedCities || [];
-
-    function renderCities() {
-      cityListEl.innerHTML = "";
-      if (!user.visitedCities.length) {
-        cityListEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(249,243,229,.7);">No cities yet.</p>';
-        return;
-      }
-      user.visitedCities.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "mad-chip";
-        div.textContent = c.name;
-        cityListEl.appendChild(div);
-      });
-    }
-
-    renderCities();
-
-    document.getElementById("city-add-btn").addEventListener("click", () => {
-      const name = document.getElementById("city-name").value.trim();
-      if (!name) return;
-      user.visitedCities.push({
-        name,
-        firstVisitedAt: new Date().toISOString()
-      });
-      saveUsers(users);
-      document.getElementById("city-name").value = "";
-      renderCities();
-    });
-
-    // Journal
-    const journalBook = document.getElementById("journal-book");
-    user.journalEntries = user.journalEntries || [];
-
-    function renderJournal() {
-      journalBook.innerHTML = "";
-      if (!user.journalEntries.length) {
-        journalBook.innerHTML = '<p style="font-size:0.8rem;">No entries yet. Start your journey.</p>';
-        return;
-      }
-      user.journalEntries
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .forEach(entry => {
-          const div = document.createElement("div");
-          div.className = "journal-entry";
-          div.innerHTML = `
-            <div style="font-size:0.7rem;opacity:.75;margin-bottom:3px;">
-              ${new Date(entry.date).toLocaleDateString()} • ${entry.location || "Somewhere on Earth"}
-            </div>
-            <div style="font-weight:600;margin-bottom:2px;">${entry.title}</div>
-            <div>${entry.text}</div>
-          `;
-          journalBook.appendChild(div);
-        });
-    }
-
-    renderJournal();
-
-    document.getElementById("journal-new-btn").addEventListener("click", () => {
-      const title = prompt("Entry title?");
-      if (!title) return;
-      const text = prompt("Write the start of your story:");
-      if (!text) return;
-
-      const entry = {
-        id: "j_" + Date.now(),
-        date: new Date().toISOString(),
-        location: "", // Later: filled by backend from GPS/city
-        title,
-        text
-      };
-      user.journalEntries.push(entry);
-      saveUsers(users);
-      renderJournal();
-    });
-  </script>
 </body>
 </html>

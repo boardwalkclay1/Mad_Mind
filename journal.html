@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mad Mind – Nomadic Journal</title>
+  <link rel="stylesheet" href="madmind.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="mad-topbar">
+      <div class="mad-topbar-left">
+        <div class="mad-avatar">📘</div>
+        <div>
+          <div class="mad-topbar-title">Nomadic journal</div>
+          <div style="font-size:0.7rem;color:rgba(249,243,229,.8);">
+            Old script • Road stories • Your book
+          </div>
+        </div>
+      </div>
+      <div class="mad-topbar-right">
+        <button class="mad-icon-btn" onclick="window.location.href='dashboard.html'">⌂</button>
+      </div>
+    </header>
+
+    <div class="scroll-panel">
+      <button id="journal-add" class="mad-btn mad-btn-primary" style="margin-bottom:8px;width:auto;min-width:130px;">
+        New entry
+      </button>
+
+      <div class="journal-book" id="journal-book"></div>
+    </div>
+  </div>
+
+  <nav class="mad-bottom-nav">
+    <button onclick="window.location.href='dashboard.html'">Home</button>
+    <button onclick="window.location.href='map.html'">Map</button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+  </nav>
+
+  <script type="module">
+    import { initBubbles } from './bubbles.js';
+    initBubbles({ count: 10, clickable: false });
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("mm_users") || "[]");
+    }
+    function saveUsers(users) {
+      localStorage.setItem("mm_users", JSON.stringify(users));
+    }
+
+    const currentId = localStorage.getItem("mm_current_user_id");
+    if (!currentId) window.location.href = "login.html";
+    const users = getUsers();
+    const user = users.find(u => u.id === currentId);
+    if (!user) window.location.href = "login.html";
+
+    user.journalEntries = user.journalEntries || [];
+    const bookEl = document.getElementById("journal-book");
+    const addBtn = document.getElementById("journal-add");
+
+    function renderJournal() {
+      bookEl.innerHTML = "";
+      if (!user.journalEntries.length) {
+        bookEl.innerHTML = '<p style="font-size:0.85rem;">Start your first page. This is your road script.</p>';
+        return;
+      }
+      user.journalEntries
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(entry => {
+          const div = document.createElement("div");
+          div.className = "journal-entry";
+          div.innerHTML = `
+            <div style="font-size:0.7rem;opacity:.75;margin-bottom:3px;">
+              ${new Date(entry.date).toLocaleDateString()} • ${entry.location || "Somewhere"}
+            </div>
+            <div style="font-weight:600;margin-bottom:2px;">${entry.title}</div>
+            <div>${entry.text}</div>
+            <div style="margin-top:4px;font-size:0.7rem;display:flex;justify-content:space-between;">
+              <button data-id="${entry.id}" class="mad-btn mad-btn-secondary" style="width:auto;padding:3px 6px;font-size:0.65rem;">
+                Edit
+              </button>
+              <button data-del="${entry.id}" class="mad-btn mad-btn-secondary" style="width:auto;padding:3px 6px;font-size:0.65rem;background:#5c0000;">
+                Delete
+              </button>
+            </div>
+          `;
+          bookEl.appendChild(div);
+        });
+
+      bookEl.querySelectorAll("button[data-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          editEntry(id);
+        });
+      });
+      bookEl.querySelectorAll("button[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-del");
+          if (!confirm("Delete this entry?")) return;
+          const idx = user.journalEntries.findIndex(e => e.id === id);
+          if (idx >= 0) user.journalEntries.splice(idx, 1);
+          saveUsers(users);
+          renderJournal();
+        });
+      });
+    }
+
+    function addEntry() {
+      const title = prompt("Entry title (this will show in your book):");
+      if (!title) return;
+      const text = prompt("Write your story (you can always edit later):");
+      if (!text) return;
+      const entry = {
+        id: "j_" + Date.now(),
+        date: new Date().toISOString(),
+        location: "",
+        title,
+        text
+      };
+      user.journalEntries.push(entry);
+      saveUsers(users);
+      renderJournal();
+      // TODO: later POST /api/journal
+    }
+
+    function editEntry(id) {
+      const entry = user.journalEntries.find(e => e.id === id);
+      if (!entry) return;
+      const title = prompt("Edit title:", entry.title);
+      if (!title) return;
+      const text = prompt("Edit story:", entry.text);
+      if (!text) return;
+      entry.title = title;
+      entry.text = text;
+      saveUsers(users);
+      renderJournal();
+    }
+
+    addBtn.addEventListener("click", addEntry);
+
+    renderJournal();
+  </script>
+</body>
+</html>

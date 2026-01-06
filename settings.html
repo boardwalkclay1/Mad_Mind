@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mad Mind – Settings</title>
+  <link rel="stylesheet" href="madmind.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="mad-topbar">
+      <div class="mad-topbar-left">
+        <div class="mad-avatar">⚙️</div>
+        <div>
+          <div class="mad-topbar-title">Settings</div>
+          <div style="font-size:0.7rem;color:rgba(249,243,229,.8);">
+            Notifications • Location • Account
+          </div>
+        </div>
+      </div>
+      <div class="mad-topbar-right">
+        <button class="mad-icon-btn" onclick="window.location.href='dashboard.html'">⌂</button>
+      </div>
+    </header>
+
+    <div class="scroll-panel">
+      <section>
+        <h2 style="font-size:0.9rem;margin-bottom:6px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Notifications
+        </h2>
+        <div style="font-size:0.8rem;margin-bottom:8px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Messages</span>
+            <input id="set-notif-messages" type="checkbox" />
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Trades & offers</span>
+            <input id="set-notif-trades" type="checkbox" />
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Nearby nomads</span>
+            <input id="set-notif-nearby" type="checkbox" />
+          </label>
+        </div>
+      </section>
+
+      <section style="margin-top:12px;border-top:1px solid rgba(245,197,66,.4);padding-top:8px;">
+        <h2 style="font-size:0.9rem;margin-bottom:6px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Location
+        </h2>
+        <div style="font-size:0.8rem;margin-bottom:8px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Show approximate region on profile</span>
+            <input id="set-location-region" type="checkbox" />
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Enable nearby alerts</span>
+            <input id="set-location-nearby" type="checkbox" />
+          </label>
+        </div>
+      </section>
+
+      <section style="margin-top:12px;border-top:1px solid rgba(245,197,66,.4);padding-top:8px;">
+        <h2 style="font-size:0.9rem;margin-bottom:6px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Account
+        </h2>
+        <button id="set-logout" class="mad-btn mad-btn-secondary" style="width:auto;min-width:120px;">
+          Log out
+        </button>
+        <p style="font-size:0.78rem;color:rgba(249,243,229,.75);margin-top:6px;">
+          This prototype stores everything locally. In the Cloudflare version, these settings sync across devices.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <nav class="mad-bottom-nav">
+    <button onclick="window.location.href='dashboard.html'">Home</button>
+    <button onclick="window.location.href='map.html'">Map</button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+  </nav>
+
+  <script type="module">
+    import { initBubbles } from './bubbles.js';
+    initBubbles({ count: 8, clickable: false });
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("mm_users") || "[]");
+    }
+    function saveUsers(users) {
+      localStorage.setItem("mm_users", JSON.stringify(users));
+    }
+
+    const currentId = localStorage.getItem("mm_current_user_id");
+    if (!currentId) window.location.href = "login.html";
+    const users = getUsers();
+    const user = users.find(u => u.id === currentId);
+    if (!user) window.location.href = "login.html";
+
+    user.settings = user.settings || {
+      notifMessages: true,
+      notifTrades: true,
+      notifNearby: false,
+      showRegion: true,
+      nearbyAlerts: false
+    };
+
+    const elNotifMessages = document.getElementById("set-notif-messages");
+    const elNotifTrades = document.getElementById("set-notif-trades");
+    const elNotifNearby = document.getElementById("set-notif-nearby");
+    const elLocRegion = document.getElementById("set-location-region");
+    const elLocNearby = document.getElementById("set-location-nearby");
+    const logoutBtn = document.getElementById("set-logout");
+
+    function renderSettings() {
+      elNotifMessages.checked = !!user.settings.notifMessages;
+      elNotifTrades.checked = !!user.settings.notifTrades;
+      elNotifNearby.checked = !!user.settings.notifNearby;
+      elLocRegion.checked = !!user.settings.showRegion;
+      elLocNearby.checked = !!user.settings.nearbyAlerts;
+    }
+
+    function saveSettings() {
+      saveUsers(users);
+      // TODO: later PUT /api/settings
+    }
+
+    elNotifMessages.addEventListener("change", () => {
+      user.settings.notifMessages = elNotifMessages.checked;
+      saveSettings();
+    });
+    elNotifTrades.addEventListener("change", () => {
+      user.settings.notifTrades = elNotifTrades.checked;
+      saveSettings();
+    });
+    elNotifNearby.addEventListener("change", () => {
+      user.settings.notifNearby = elNotifNearby.checked;
+      saveSettings();
+    });
+    elLocRegion.addEventListener("change", () => {
+      user.settings.showRegion = elLocRegion.checked;
+      saveSettings();
+    });
+    elLocNearby.addEventListener("change", () => {
+      user.settings.nearbyAlerts = elLocNearby.checked;
+      saveSettings();
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("mm_current_user_id");
+      window.location.href = "login.html";
+    });
+
+    renderSettings();
+  </script>
+</body>
+</html>

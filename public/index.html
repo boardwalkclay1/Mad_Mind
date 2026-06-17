@@ -37,7 +37,7 @@
     initBubbles({ count: 14, clickable: true });
 
     async function loadUsers() {
-      const res = await fetch("./users.json", { cache: "no-store" });
+      const res = await fetch("js//users.json", { cache: "no-store" });
       return await res.json();
     }
 

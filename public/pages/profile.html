@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mad Mind – Profile</title>
+<style>
+    body { background:#000; color:#fff; font-family:Arial; margin:0; }
+    header { padding:20px; border-bottom:1px solid #333; text-align:center; font-size:24px; }
+    .section { padding:20px; border-bottom:1px solid #222; }
+    .media-strip { display:flex; gap:10px; overflow-x:auto; }
+    .media-strip img, .media-strip video { width:120px; height:120px; object-fit:cover; border:1px solid #444; }
+    .service-card, .city-card, .journal-page { border:1px solid #444; padding:15px; margin-bottom:10px; }
+    .button { background:#111; border:1px solid #555; padding:8px 12px; cursor:pointer; }
+    .button:hover { background:#222; }
+    .journal-text { font-family:"Lucida Handwriting", cursive; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<header>Mad Mind – Profile</header>
+
+<div class="section" id="profileHeader">
+    <h2 id="profileName"></h2>
+    <p id="profileStatus"></p>
+    <button class="button" onclick="sendMessage()">Message</button>
+</div>
+
+<div class="section">
+    <h3>Media</h3>
+    <div class="media-strip" id="mediaStrip"></div>
+</div>
+
+<div class="section">
+    <h3>Skills & Services</h3>
+    <div id="servicesList"></div>
+</div>
+
+<div class="section">
+    <h3>Cities I've Been To</h3>
+    <div id="citiesList"></div>
+</div>
+
+<div class="section">
+    <h3>Nomadic Journal</h3>
+    <div id="journalPages"></div>
+    <button class="button" onclick="newJournalPage()">New Page</button>
+</div>
+
+<script>
+// ===== LOAD USER DATA =====
+const user = JSON.parse(localStorage.getItem("madmind_user")) || {
+    name:"Nomad",
+    status:"Wandering",
+    media:[],
+    services:[],
+    cities:[],
+    journal:[]
+};
+
+document.getElementById("profileName").innerText = user.name;
+document.getElementById("profileStatus").innerText = user.status;
+
+// ===== MEDIA =====
+const mediaStrip = document.getElementById("mediaStrip");
+user.media.forEach(m => {
+    let el = document.createElement(m.type === "video" ? "video" : "img");
+    el.src = m.url;
+    if (m.type === "video") el.controls = true;
+    mediaStrip.appendChild(el);
+});
+
+// ===== SERVICES =====
+const servicesList = document.getElementById("servicesList");
+user.services.forEach(s => {
+    let card = document.createElement("div");
+    card.className = "service-card";
+    card.innerHTML = `
+        <h4>${s.title}</h4>
+        <p>${s.description}</p>
+        <button class="button">Offer Trade</button>
+        <button class="button">Offer Payment</button>
+    `;
+    servicesList.appendChild(card);
+});
+
+// ===== CITIES =====
+const citiesList = document.getElementById("citiesList");
+user.cities.forEach(c => {
+    let card = document.createElement("div");
+    card.className = "city-card";
+    card.innerHTML = `
+        <h4>${c.name}</h4>
+        <p>${c.date}</p>
+        <p>${c.note || ""}</p>
+    `;
+    citiesList.appendChild(card);
+});
+
+// ===== JOURNAL =====
+const journalPages = document.getElementById("journalPages");
+user.journal.forEach((p, i) => {
+    let page = document.createElement("div");
+    page.className = "journal-page";
+    page.innerHTML = `
+        <h4>Page ${i+1}</h4>
+        <div class="journal-text">${p.text}</div>
+    `;
+    journalPages.appendChild(page);
+});
+
+function newJournalPage() {
+    const text = prompt("Write your journal entry");
+    if (!text) return;
+    user.journal.push({ text, date:new Date().toISOString() });
+    localStorage.setItem("madmind_user", JSON.stringify(user));
+    location.reload();
+}
+
+function sendMessage() {
+    alert("Messaging coming soon");
+}
+</script>
+
+</body>
+</html>

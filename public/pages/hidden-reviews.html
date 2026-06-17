@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mad Mind – Hidden Reviews</title>
+  <link rel="stylesheet" href="madmind.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="mad-topbar">
+      <div class="mad-topbar-left">
+        <div class="mad-avatar">👁️</div>
+        <div>
+          <div class="mad-topbar-title">Hidden intel</div>
+          <div style="font-size:0.7rem;color:rgba(249,243,229,.8);">
+            Private notes about spots • Share carefully
+          </div>
+        </div>
+      </div>
+      <div class="mad-topbar-right">
+        <button class="mad-icon-btn" onclick="window.location.href='dashboard.html'">⌂</button>
+      </div>
+    </header>
+
+    <div class="scroll-panel">
+      <section>
+        <h2 style="font-size:0.9rem;margin-bottom:4px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Your hidden reviews
+        </h2>
+        <div id="hidden-own"></div>
+      </section>
+
+      <section style="margin-top:14px;border-top:1px solid rgba(245,197,66,.4);padding-top:8px;">
+        <h2 style="font-size:0.9rem;margin-bottom:4px;color:var(--gold-soft);letter-spacing:0.14em;text-transform:uppercase;">
+          Requests & unlocks (prototype)
+        </h2>
+        <p style="font-size:0.78rem;color:rgba(249,243,229,.8);margin-bottom:6px;">
+          Later, this will manage requests to access others’ hidden notes via contribution or trust.
+        </p>
+        <div id="hidden-requests"></div>
+      </section>
+    </div>
+  </div>
+
+  <nav class="mad-bottom-nav">
+    <button onclick="window.location.href='dashboard.html'">Home</button>
+    <button onclick="window.location.href='map.html'">Map</button>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+  </nav>
+
+  <script type="module">
+    import { initBubbles } from './bubbles.js';
+    initBubbles({ count: 8, clickable: false });
+
+    function getHiddenReviews() {
+      return JSON.parse(localStorage.getItem("mm_hidden_reviews") || "[]");
+    }
+    function saveHiddenReviews(revs) {
+      localStorage.setItem("mm_hidden_reviews", JSON.stringify(revs));
+    }
+
+    const currentId = localStorage.getItem("mm_current_user_id");
+    if (!currentId) window.location.href = "login.html";
+
+    const ownEl = document.getElementById("hidden-own");
+    const reqEl = document.getElementById("hidden-requests");
+
+    function renderOwn() {
+      const reviews = getHiddenReviews().filter(r => r.userId === currentId);
+      ownEl.innerHTML = "";
+      if (!reviews.length) {
+        ownEl.innerHTML = '<p style="font-size:0.8rem;color:rgba(249,243,229,.7);">No hidden notes yet.</p>';
+        return;
+      }
+      reviews.forEach(r => {
+        const div = document.createElement("div");
+        div.style.border = "1px solid rgba(245,197,66,.6)";
+        div.style.borderRadius = "10px";
+        div.style.padding = "7px 9px";
+        div.style.marginBottom = "6px";
+        div.innerHTML = `
+          <div style="font-size:0.85rem;color:var(--gold-soft);font-weight:600;">
+            ${r.placeName || "Unknown place"}
+          </div>
+          <div style="font-size:0.75rem;color:rgba(249,243,229,.85);margin-top:3px;">
+            ${r.text}
+          </div>
+          <div style="font-size:0.7rem;margin-top:3px;color:rgba(249,243,229,.7);">
+            Strategy: ${r.sharingStrategy || "contribution"} • Created ${new Date(r.createdAt).toLocaleDateString()}
+          </div>
+        `;
+        ownEl.appendChild(div);
+      });
+    }
+
+    function renderRequests() {
+      reqEl.innerHTML = "";
+      reqEl.innerHTML = `
+        <p style="font-size:0.8rem;color:rgba(249,243,229,.7);">
+          In full version, this will:
+        </p>
+        <ul style="font-size:0.78rem;color:rgba(249,243,229,.8);margin-top:4px;padding-left:18px;list-style:disc;">
+          <li>Show who requested access to your hidden reviews.</li>
+          <li>Let you grant access in exchange for their hidden review or trust level.</li>
+          <li>Track what hidden intel you have unlocked from others.</li>
+        </ul>
+      `;
+    }
+
+    // Seed demo hidden review
+    (function seedDemo() {
+      const revs = getHiddenReviews();
+      if (!revs.some(r => r.userId === currentId)) {
+        revs.push({
+          id: "hr_demo",
+          userId: currentId,
+          placeId: "p2",
+          placeName: "Walmart Edge Lot",
+          text: "Quiet corner behind garden center; cameras facing main doors, not back fence. Security swings at 2–3am.",
+          sharingStrategy: "contribution",
+          createdAt: new Date().toISOString()
+        });
+        saveHiddenReviews(revs);
+      }
+    })();
+
+    renderOwn();
+    renderRequests();
+  </script>
+</body>
+</html>

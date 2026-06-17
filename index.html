@@ -36,20 +36,21 @@
     import { initBubbles } from './bubbles.js';
     initBubbles({ count: 14, clickable: true });
 
-    // Local storage "auth" for prototype
-    function getUsers() {
-      return JSON.parse(localStorage.getItem("mm_users") || "[]");
+    async function loadUsers() {
+      const res = await fetch("./users.json", { cache: "no-store" });
+      return await res.json();
     }
 
-    document.getElementById("login-btn").addEventListener("click", () => {
+    document.getElementById("login-btn").addEventListener("click", async () => {
       const id = document.getElementById("login-identifier").value.trim();
       const pw = document.getElementById("login-password").value;
+
       if (!id || !pw) {
         alert("Enter both identifier and password.");
         return;
       }
 
-      const users = getUsers();
+      const users = await loadUsers();
       const user = users.find(
         u => (u.email === id || u.username === id) && u.password === pw
       );
@@ -60,7 +61,6 @@
       }
 
       localStorage.setItem("mm_current_user_id", user.id);
-      // TODO: Replace with Cloudflare Worker /api/login call later.
       window.location.href = "dashboard.html";
     });
 
